@@ -1,0 +1,53 @@
+{
+  "name": "x-wp/hooks",
+  "description": "Provides standardized way to declare and invoke WordPress hooks",
+  "license": "GPL-2.0-only",
+  "type": "library",
+  "keywords": [
+    "wordpress",
+    "hooks",
+    "actions",
+    "filters",
+    "hook-manager",
+    "extended-wp"
+  ],
+  "authors": [
+    {
+      "name": "Sibin Grasic",
+      "email": "sibin.grasic@oblak.studio"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/x-wp/hook-manager/issues"
+  },
+  "require": {
+    "php": ">=8.1",
+    "automattic/jetpack-constants": "^2.0",
+    "x-wp/hook-contracts": "^1"
+  },
+  "require-dev": {
+    "oblak/wordpress-coding-standard": "^1"
+  },
+  "provide": {
+    "x-wp/hook-implementation": "1.0.0"
+  },
+  "suggest": {
+    "automattic/jetpack-autoloader": "Allow for better interoperability with other plugins that use this package."
+  },
+  "autoload": {
+    "psr-4": {
+      "XWP\\Hook\\": "src"
+    },
+    "classmap": [
+      "src/Debug/"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "automattic/jetpack-autoloader": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "ergebnis/composer-normalize": true
+    },
+    "sort-packages": true
+  }
+}
