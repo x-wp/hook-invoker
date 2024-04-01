@@ -1,5 +1,5 @@
 {
-  "name": "x-wp/hooks",
+  "name": "x-wp/hook-invoker",
   "description": "Provides standardized way to declare and invoke WordPress hooks",
   "license": "GPL-2.0-only",
   "type": "library",
@@ -37,10 +37,7 @@
   "autoload": {
     "psr-4": {
       "XWP\\Hook\\": "src"
-    },
-    "classmap": [
-      "src/Debug/"
-    ]
+    }
   },
   "config": {
     "allow-plugins": {
