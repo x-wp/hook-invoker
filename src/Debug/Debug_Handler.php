@@ -20,7 +20,7 @@ use XWP\Hook\Invoker;
 #[Handler(
 	tag: 'plugins_loaded',
 	priority: 10,
-	context: Handler::CTX_GLOBAL & ~Handler::CTX_CLI & ~Handler::CTX_REST,
+	context: Handler::CTX_GLOBAL & ~Handler::CTX_CLI & ~Handler::CTX_REST & ~Handler::CTX_AJAX,
 )]
 class Debug_Handler {
     /**
@@ -67,19 +67,6 @@ class Debug_Handler {
         );
 
         return $statuses;
-    }
-
-    /**
-     * Outputs the CSS for the debug panel
-     */
-    #[Action( tag: 'debug_bar_enqueue_scripts' )]
-    public function output_css() {
-        //phpcs:ignore
-        echo '<' . 'style type="text/css">' . "\n";
-        echo <<<'CSS'
-
-        CSS;
-        echo '</style>';
     }
 
     /**

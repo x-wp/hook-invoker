@@ -10,5 +10,9 @@
     <severity>0</severity>
   </rule>
 
+  <rule ref="SlevomatCodingStandard.Operators.SpreadOperatorSpacing.IncorrectSpacesAfterOperator">
+    <severity>0</severity>
+  </rule>
+
   <file>src/</file>
 </ruleset>
