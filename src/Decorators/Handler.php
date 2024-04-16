@@ -84,10 +84,12 @@ class Handler extends Hook implements Initializable {
     public function initialize(): static {
         $classname = $this->classname;
 
-        $this->target      = new $classname();
+        $this->target      = \method_exists( $classname, 'instance' )
+        ? $classname::instance()
+        : new $classname();
         $this->initialized = true;
 
-        if ( \class_implements( $this->target, On_Initialize::class ) ) {
+        if ( \in_array( On_Initialize::class, \class_implements( $this->target ), true ) ) {
             $this->target->on_initialize();
         }
 

@@ -381,7 +381,11 @@ class Invoker implements Invoker_Interface {
      * @param  Invokable $hook The hook to invoke.
      */
     private function invoke_hook( Invokable $hook ) {
-        if ( ! $this->is_valid_context( $hook ) || ! $hook->can_invoke() ) {
+        if (
+            ! $this->is_valid_context( $hook ) ||
+            ! $this->is_valid_context( $hook->handler ) ||
+            ! $hook->can_invoke()
+        ) {
             return;
         }
 
@@ -471,7 +475,8 @@ class Invoker implements Invoker_Interface {
      */
     public function can_activate( Hookable $hook ): bool {
         return ! $this->has_killswitch( $hook ) &&
-            $this->has_dependency( $hook );
+            $this->has_dependency( $hook ) &&
+            $this->is_valid_context( $hook );
     }
 
     /**

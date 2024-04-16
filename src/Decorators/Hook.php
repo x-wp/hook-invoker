@@ -74,7 +74,7 @@ abstract class Hook implements Hookable {
      * @param  string      $tag       Tag to set.
      * @param  array|false $modifiers Values to replace in the tag name.
      */
-    private function set_tag( string $tag, array|string|false $modifiers ) {
+    protected function set_tag( string $tag, array|string|false $modifiers ) {
         if ( ! $modifiers ) {
             return $tag;
         }

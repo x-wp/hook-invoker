@@ -69,7 +69,9 @@ class Action extends Hook implements Invokable {
     }
 
     public function can_invoke(): bool {
-        return $this->check_conditional();
+        return $this->check_conditional() && (
+            $this->can_invoke_indirectly() || $this->handler->can_initialize()
+        );
     }
 
     protected function check_method( string $method ): bool {
@@ -138,7 +140,7 @@ class Action extends Hook implements Invokable {
     }
 
     protected function indirect_callback( ...$args ) {
-        if ( ! $this->can_invoke() ) {
+        if ( ! $this->can_invoke() || ! $this->handler->can_initialize() ) {
 			return;
         }
 

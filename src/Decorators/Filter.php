@@ -24,7 +24,7 @@ class Filter extends Action {
      * @return mixed Filter callback return value.
      */
     protected function indirect_callback( ...$args ) {
-        if ( ! $this->can_invoke() ) {
+        if ( ! $this->can_invoke() || ! $this->handler->can_initialize() ) {
             return $args[0] ?? null;
         }
 
