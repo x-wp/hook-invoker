@@ -31,6 +31,9 @@
   "provide": {
     "x-wp/hook-implementation": "1.0.0"
   },
+  "replace": {
+    "oblak/wp-hook-di": "^1"
+  },
   "suggest": {
     "automattic/jetpack-autoloader": "Allow for better interoperability with other plugins that use this package."
   },
