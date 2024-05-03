@@ -9,9 +9,7 @@
 namespace XWP\Hook;
 
 use Automattic\Jetpack\Constants;
-use ReflectionClass;
 use ReflectionMethod;
-use XWP\Contracts\Hook\Accessible_Hook_Methods;
 use XWP\Contracts\Hook\Context;
 use XWP\Contracts\Hook\Context_Interface;
 use XWP\Contracts\Hook\Hookable;
@@ -371,7 +369,7 @@ class Invoker implements Invoker_Interface {
             return $this;
         }
 
-        foreach ( $this->get_hookable_methods( $handler->reflector ) as $m ) {
+        foreach ( Reflection::get_hookable_methods( $handler->reflector ) as $m ) {
             $hooks = $this->register_method( $handler, $m );
 
             if ( ! $hooks ) {
@@ -435,72 +433,6 @@ class Invoker implements Invoker_Interface {
         }
 
         $hook->invoke();
-    }
-
-    /**
-     * Get the hooked methods for a handler.
-     *
-     * @param  ReflectionClass $r The reflection class to get the methods for.
-     * @return array<ReflectionMethod>
-     */
-    private function get_hookable_methods( ReflectionClass $r ): array {
-        $traits = $this->class_uses_deep( $r->getName() );
-
-        return \array_filter(
-            $r->getMethods( $this->get_method_types( $traits ) ),
-            $this->is_method_hookable( ... ),
-        );
-    }
-
-    /**
-     * Get the method types to include.
-     *
-     * @param  array<string> $traits The traits to check.
-     * @return int
-     */
-    private function get_method_types( array $traits ): int {
-        $include = ReflectionMethod::IS_PUBLIC;
-
-        if ( \in_array( Accessible_Hook_Methods::class, $traits, true ) ) {
-            $include |= ReflectionMethod::IS_PRIVATE | ReflectionMethod::IS_PROTECTED;
-        }
-
-        return $include;
-    }
-
-    /**
-     * Get all the traits used by a class.
-     *
-     * @param  string|object $target Class or object to get the traits for.
-     * @param  bool          $autoload        Whether to allow this function to load the class automatically through the __autoload() magic method.
-     * @return array                          Array of traits.
-     */
-	private function class_uses_deep( string|object $target, bool $autoload = true ) {
-		$traits = array();
-
-		do {
-			$traits = \array_merge( \class_uses( $target, $autoload ), $traits );
-            $target = \get_parent_class( $target );
-		} while ( $target );
-
-		foreach ( $traits as $trait ) {
-			$traits = \array_merge( \class_uses( $trait, $autoload ), $traits );
-		}
-
-		return \array_values( \array_unique( $traits ) );
-	}
-
-    /**
-     * Check if a method is hookable.
-     *
-     * @param  ReflectionMethod $m The method to check.
-     * @return bool
-     */
-    private function is_method_hookable( ReflectionMethod $m, ): bool {
-        $ignore = array( '__call', '__callStatic', 'check_method_access', 'is_method_valid', 'get_registered_hooks', '__construct' );
-        return ! \in_array( $m->getName(), $ignore, true ) &&
-            ! $m->isStatic()
-            && $m->getAttributes( Invokable::class, \ReflectionAttribute::IS_INSTANCEOF );
     }
 
     /**
