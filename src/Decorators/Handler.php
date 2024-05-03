@@ -31,7 +31,7 @@ class Handler extends Hook implements Initializable {
      *
      * @var class-string
      */
-    protected string $classname;
+    public string $classname;
 
     /**
      * Is the handler initialized?
@@ -82,11 +82,16 @@ class Handler extends Hook implements Initializable {
     }
 
     public function initialize(): static {
+        if ( $this->initialized ) {
+            return $this;
+        }
+
         $classname = $this->classname;
 
-        $this->target      = \method_exists( $classname, 'instance' )
-        ? $classname::instance()
-        : new $classname();
+        $this->target ??= \method_exists( $classname, 'instance' )
+            ? $classname::instance()
+            : new $classname();
+
         $this->initialized = true;
 
         if ( \in_array( On_Initialize::class, \class_implements( $this->target ), true ) ) {
