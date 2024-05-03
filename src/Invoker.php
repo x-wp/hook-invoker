@@ -225,6 +225,35 @@ class Invoker implements Invoker_Interface {
     }
 
     /**
+     * Create a handler from a class instance.
+     *
+     * @param  object $instance The instance to create a handler for.
+     * @return Initializable
+     */
+    public function create_handler( object $instance ): Initializable {
+        if ( $instance instanceof Handler ) {
+            return $instance;
+        }
+
+        if ( isset( $this->handlers[ $instance::class ] ) ) {
+            return $this->handlers[ $instance::class ];
+        }
+
+        $reflector = Reflection::get_reflector( $instance );
+        $handler   = Reflection::get_decorator( $reflector, Initializable::class );
+
+        if ( ! $handler ) {
+            $handler = new Handler( strategy: Initialize::Dynamically );
+        }
+
+        return $handler
+            ->set_classname( $reflector->getName() )
+            ->set_target( $instance )
+            ->set_reflector( $reflector )
+            ->initialize();
+    }
+
+    /**
      * Loads an object as a handler.
      *
      * Used for loading handlers that are not decorated.
@@ -233,25 +262,37 @@ class Invoker implements Invoker_Interface {
      *
      * @throws \InvalidArgumentException If the object is decorated.
      */
-    public function load_handler( object $instance ) {
-        $reflector = Reflection::get_reflector( $instance );
+    public function load_handler( object $instance, ) {
+        $handler = $this->create_handler( $instance );
 
-        if ( Reflection::get_decorator( $reflector, Initializable::class ) ) {
-            throw new \InvalidArgumentException( 'Only non-decorated classes can be loaded' );
+        if ( isset( $this->handlers[ $handler->classname ] ) ) {
+            return $this;
         }
-
-        $handler = ( new Handler( strategy: Initialize::Dynamically ) )
-            ->set_classname( $instance::class )
-            ->set_target( $instance )
-            ->set_reflector( $reflector );
 
         $this->handlers[ $handler->classname ] = $handler;
         $this->hooks[ $handler->classname ]    = array();
 
         return $this
-            ->set_handler( $handler )
             ->register_methods( $handler )
             ->invoke_methods( $handler );
+    }
+
+    /**
+     * Load hooks for a handler.
+     *
+     * @param Initializable $handler The handler to load hooks for.
+     * @param array         $hooks   The hooks to load.
+     */
+    public function load_hooks( Initializable $handler, array $hooks ): static {
+        $this->handlers[ $handler->classname ] ??= $handler;
+
+        if ( \count( $this->hooks[ $handler->classname ] ?? array() ) ) {
+            return $this;
+        }
+
+        $this->hooks[ $handler->classname ] = $hooks;
+
+        return $this;
     }
 
     /**
@@ -326,6 +367,10 @@ class Invoker implements Invoker_Interface {
      * @param  Initializable $handler Handler to register methods for.
      */
     private function register_methods( Initializable $handler ) {
+        if ( \count( $this->hooks[ $handler->classname ] ) > 0 ) {
+            return $this;
+        }
+
         foreach ( $this->get_hookable_methods( $handler->reflector ) as $m ) {
             $hooks = $this->register_method( $handler, $m );
 
