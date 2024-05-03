@@ -110,6 +110,36 @@ final class Reflection {
     }
 
     /**
+     * Get decorators for a target class, and its parent classes.
+     *
+     * @template T
+     * @param  \Reflector|mixed $target    The target to get decorators for.
+     * @param  class-string<T>  $decorator The decorator to get.
+     * @param  int|null         $flags     Flags to pass to getAttributes.
+     * @return array<T>
+     */
+    public static function get_decorators_deep(
+        mixed $target,
+        string $decorator,
+        ?int $flags = ReflectionAttribute::IS_INSTANCEOF,
+    ): array {
+        $decorators = array();
+
+        while ( $target ) {
+            $decorators = \array_merge(
+                $decorators,
+                self::get_decorators( $target, $decorator, $flags ),
+            );
+
+            $target = $target instanceof \ReflectionClass
+                ? $target->getParentClass()
+                : \get_parent_class( $target );
+        }
+
+        return $decorators;
+    }
+
+    /**
      * Get a **SINGLE** attribute for a target
      *
      * @template T
