@@ -20,13 +20,6 @@ class Handler extends Hook implements Initializable {
     public const HOOK_TYPE = 'handler';
 
     /**
-     * Flag indicating if the handler methods have been registered.
-     *
-     * @var bool
-     */
-    public bool $processed = false;
-
-    /**
      * Handler classname.
      *
      * @var class-string
@@ -47,9 +40,9 @@ class Handler extends Hook implements Initializable {
         array|string|\Closure|null $conditional = null,
         array|string|false $requires = false,
         string|array|false $modifiers = false,
-        public readonly Initialize $strategy = Initialize::Deferred,
+        protected readonly Initialize $strategy = Initialize::Deferred,
     ) {
-        if ( ! $strategy->is_tag_valid( $tag ) ) {
+        if ( ! $strategy->isTagValid( $tag ) ) {
             throw new \InvalidArgumentException(
                 \esc_html( "Specified tag is not valid for {$strategy->value} strategy" ),
             );
@@ -68,17 +61,12 @@ class Handler extends Hook implements Initializable {
         return $this;
     }
 
-    protected function check_method( string $method ): bool {
-        return ! \method_exists( $this->classname, $method ) || $this->classname::$method( $this );
-    }
-
     public function can_initialize(): bool {
         if ( Initialize::Unconditionally === $this->strategy ) {
             return true;
         }
-
-        $method = $this->check_method( 'can_initialize' );
-        return $method && $this->check_conditional();
+        return $this->can_fire() &&
+            $this->check_method( array( $this->classname, 'can_initialize' ) );
     }
 
     public function initialize(): static {
@@ -86,12 +74,14 @@ class Handler extends Hook implements Initializable {
             return $this;
         }
 
-        $classname = $this->classname;
+        $this->target ??= \method_exists( $this->classname, 'instance' )
+            ? $this->classname::instance()
+            : new ( $this->classname )();
 
-        $this->target ??= \method_exists( $classname, 'instance' )
-            ? $classname::instance()
-            : new $classname();
+        return $this->on_initialize();
+    }
 
+    protected function on_initialize(): static {
         $this->initialized = true;
 
         if ( \in_array( On_Initialize::class, \class_implements( $this->target ), true ) ) {

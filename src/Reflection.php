@@ -78,6 +78,20 @@ final class Reflection {
     }
 
     /**
+     * Check if a class implements an interface.
+     *
+     * @param  string|object $thing    The class to check.
+     * @param  string        $iname    The interface to check for.
+     * @param  bool          $autoload Whether to allow this function to load the class automatically through the __autoload() magic method.
+     * @return bool
+     */
+    public static function class_implements( string|object $thing, string $iname, bool $autoload = true ): bool {
+        $cname = \is_object( $thing ) ? $thing::class : $thing;
+
+        return \class_exists( $cname ) && \in_array( $iname, \class_implements( $thing, $autoload ), true );
+    }
+
+    /**
      * Get decorators for a target
      *
      * @template T

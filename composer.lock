@@ -59,16 +59,16 @@
         },
         {
             "name": "x-wp/hook-contracts",
-            "version": "v1.1.0",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/x-wp/hook-contracts.git",
-                "reference": "e402665f29ab67db8ee73f7ec08eae45b7e490de"
+                "reference": "1c22d5220d35e32fa1eb7ddb7c44a67d34329737"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/x-wp/hook-contracts/zipball/e402665f29ab67db8ee73f7ec08eae45b7e490de",
-                "reference": "e402665f29ab67db8ee73f7ec08eae45b7e490de",
+                "url": "https://api.github.com/repos/x-wp/hook-contracts/zipball/1c22d5220d35e32fa1eb7ddb7c44a67d34329737",
+                "reference": "1c22d5220d35e32fa1eb7ddb7c44a67d34329737",
                 "shasum": ""
             },
             "require": {
@@ -106,9 +106,9 @@
             ],
             "support": {
                 "issues": "https://github.com/x-wp/hook-contracts/issues",
-                "source": "https://github.com/x-wp/hook-contracts/tree/v1.1.0"
+                "source": "https://github.com/x-wp/hook-contracts/tree/v1.2.0"
             },
-            "time": "2024-04-04T17:30:59+00:00"
+            "time": "2024-05-08T00:18:53+00:00"
         }
     ],
     "packages-dev": [
@@ -571,16 +571,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.28.0",
+            "version": "1.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb"
+                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb",
-                "reference": "cd06d6b1a1b3c75b0b83f97577869fd85a3cd4fb",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/536889f2b340489d328f5ffb7b02bb6b183ddedc",
+                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc",
                 "shasum": ""
             },
             "require": {
@@ -612,9 +612,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.28.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.29.0"
             },
-            "time": "2024-04-03T18:51:33+00:00"
+            "time": "2024-05-06T12:04:23+00:00"
         },
         {
             "name": "slevomat/coding-standard",

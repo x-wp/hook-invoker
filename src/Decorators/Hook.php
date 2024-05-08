@@ -8,7 +8,9 @@
 
 namespace XWP\Hook\Decorators;
 
+use XWP\Contracts\Hook\Context;
 use XWP\Contracts\Hook\Hookable;
+use XWP\Hook\Context_Host;
 
 /**
  * Base hook from which the action and filter decorators inherit.
@@ -21,7 +23,7 @@ abstract class Hook implements Hookable {
      *
      * @var string
      */
-    public string $tag;
+    protected string $tag;
 
     /**
      * Priority when hook was invoked.
@@ -45,6 +47,13 @@ abstract class Hook implements Hookable {
     protected array|object $target;
 
     /**
+     * Current context.
+     *
+     * @var Context
+     */
+    protected static Context $current_ctx;
+
+    /**
      * Constructor.
      *
      * @param  string|null                     $tag         Tag to hook the function to.
@@ -59,13 +68,15 @@ abstract class Hook implements Hookable {
      */
     public function __construct(
         ?string $tag,
-        public readonly array|int|string $priority = 10,
-        public readonly int $context = self::CTX_GLOBAL,
-        public readonly array|string|\Closure|null $conditional = null,
-        public readonly array|string|false $requires = false,
-        public readonly string|array|false $modifiers = false,
+        protected readonly array|int|string $priority = 10,
+        protected readonly int $context = self::CTX_GLOBAL,
+        protected readonly array|string|\Closure|null $conditional = null,
+        protected readonly array|string|false $requires = false,
+        protected readonly string|array|false $modifiers = false,
     ) {
         $this->tag = $this->set_tag( $tag ?? '', $modifiers );
+
+        static::$current_ctx ??= Context_Host::get_context();
     }
 
     /**
@@ -86,16 +97,24 @@ abstract class Hook implements Hookable {
         return \vsprintf( $tag, $modifiers );
     }
 
+    public function set_target( array|object $target ): static {
+        $this->target ??= $target;
+
+        return $this;
+    }
+
+    public function set_reflector( \Reflector $r ): static {
+        $this->reflector ??= $r;
+
+        return $this;
+    }
+
     /**
      * Since the priority can be dynamic - we determine it at runtime.
      *
      * @return int
      */
-    private function set_priority(): int {
-        if ( isset( $this->real_priority ) ) {
-            return $this->real_priority;
-        }
-
+    private function set_real_priority(): int {
         $prio = $this->priority;
         $prio = match ( true ) {
             \defined( $prio )         => \constant( $prio ),
@@ -111,28 +130,28 @@ abstract class Hook implements Hookable {
         return $this->real_priority;
     }
 
-    /**
-     * Check the if the conditional method exists and can be invoked.
-     *
-     * @param  string $method Method to check.
-     * @return bool
-     */
-    abstract protected function check_method( string $method ): bool;
-
-    protected function check_conditional(): bool {
-        return ! $this->conditional || ( $this->conditional )( $this );
+    protected function can_fire(): bool {
+        return $this->check_context() && $this->check_method( $this->conditional );
     }
 
-    public function set_target( array|object $target ): static {
-        $this->target ??= $target;
-
-        return $this;
+    protected function check_method( array|string|\Closure|null $method ): bool {
+        return ! \is_callable( $method ) || $method( $this );
     }
 
-    public function set_reflector( \Reflector $r ): static {
-        $this->reflector ??= $r;
+    public function check_context(): bool {
+        return static::$current_ctx->is_valid( $this->context );
+    }
 
-        return $this;
+    protected function get_prop( string $name ): mixed {
+        return $this->$name ?? null;
+    }
+
+    protected function get_real_priority(): int {
+        if ( ! isset( $this->real_priority ) ) {
+            return $this->set_real_priority();
+        }
+
+        return $this->real_priority;
     }
 
     /**
@@ -142,10 +161,8 @@ abstract class Hook implements Hookable {
      * @return mixed
      */
     public function __get( string $name ): mixed {
-        if ( 'real_priority' === $name ) {
-            return $this->set_priority();
-        }
-
-        return $this->$name ?? null;
+        return \method_exists( $this, "get_{$name}" )
+            ? $this->{"get_{$name}"}()
+            : $this->get_prop( $name );
     }
 }
