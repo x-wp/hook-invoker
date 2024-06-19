@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "70551d675684e06ee69e3254898f79eb",
+    "content-hash": "cf93fba7e9a66756d74a74a6391017b1",
     "packages": [
         {
             "name": "automattic/jetpack-constants",
@@ -56,6 +56,111 @@
                 "source": "https://github.com/Automattic/jetpack-constants/tree/v2.0.2"
             },
             "time": "2024-04-30T19:01:57+00:00"
+        },
+        {
+            "name": "x-wp/helper-classes",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/x-wp/helper-classes.git",
+                "reference": "ef3c62875d20b89eaaf78a3b0f3d79d962dd2030"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/x-wp/helper-classes/zipball/ef3c62875d20b89eaaf78a3b0f3d79d962dd2030",
+                "reference": "ef3c62875d20b89eaaf78a3b0f3d79d962dd2030",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "x-wp/helper-traits": "^1"
+            },
+            "suggest": {
+                "automattic/jetpack-autoloader": "Allow for better interoperability with other plugins that use this package."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "XWP\\Helper\\Classes\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "Sibin Grasic",
+                    "email": "sibin.grasic@oblak.studio"
+                }
+            ],
+            "description": "Generic abstraction related to xWP packages",
+            "keywords": [
+                "abstractions",
+                "contracts",
+                "decoupling",
+                "extended-wp",
+                "interfaces",
+                "interoperability",
+                "standards"
+            ],
+            "support": {
+                "issues": "https://github.com/x-wp/helper-classes/issues",
+                "source": "https://github.com/x-wp/helper-classes/tree/v1.3.0"
+            },
+            "time": "2024-05-31T04:26:38+00:00"
+        },
+        {
+            "name": "x-wp/helper-traits",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/x-wp/helper-traits.git",
+                "reference": "b99bcb6f2fadeedba30fc63abe39aa8e88e0949f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/x-wp/helper-traits/zipball/b99bcb6f2fadeedba30fc63abe39aa8e88e0949f",
+                "reference": "b99bcb6f2fadeedba30fc63abe39aa8e88e0949f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "suggest": {
+                "automattic/jetpack-autoloader": "Allow for better interoperability with other plugins that use this package."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "XWP\\Helper\\Traits\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "Sibin Grasic",
+                    "email": "sibin.grasic@oblak.studio"
+                }
+            ],
+            "description": "Various traits related to xWP packages",
+            "keywords": [
+                "contracts",
+                "decoupling",
+                "extended-wp",
+                "interfaces",
+                "interoperability",
+                "standards",
+                "traits"
+            ],
+            "support": {
+                "issues": "https://github.com/x-wp/helper-traits/issues",
+                "source": "https://github.com/x-wp/helper-traits/tree/v1.3.0"
+            },
+            "time": "2024-05-26T16:39:47+00:00"
         },
         {
             "name": "x-wp/hook-contracts",

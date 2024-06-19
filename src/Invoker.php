@@ -2,8 +2,8 @@
 /**
  * Invoker class file.
  *
- * @package eXtended WordPress-DI
- * @subpackage Services
+ * @package eXtended WordPress
+ * @subpackage Hook Invoker
  */
 
 namespace XWP\Hook;
@@ -17,18 +17,14 @@ use XWP\Contracts\Hook\Initializable;
 use XWP\Contracts\Hook\Initialize;
 use XWP\Contracts\Hook\Invokable;
 use XWP\Contracts\Hook\Invoker_Interface;
+use XWP\Helper\Traits\Singleton;
 use XWP\Hook\Decorators\Handler;
 
 /**
  * Executes the registered handlers.
  */
 class Invoker implements Invoker_Interface {
-    /**
-     * Hook manager instance.
-     *
-     * @var Invoker|null
-     */
-    private static ?Invoker $instance = null;
+    use Singleton;
 
     /**
      * Current execution context.
@@ -64,33 +60,6 @@ class Invoker implements Invoker_Interface {
      * @var array<string, array<string, Invokable>>
      */
     public array $hooks = array();
-
-    /**
-     * Get the instance of the Hook Manager.
-     *
-     * @return Invoker
-     */
-    public static function instance(): static {
-        return static::$instance ??= new static();
-    }
-
-    /**
-     * Prevent cloning
-     *
-     * @throws \BadMethodCallException If cloning is attempted.
-     */
-    public function __clone() {
-        throw new \BadMethodCallException( 'Cloning is not allowed' );
-    }
-
-    /**
-     * Prevent unserializing
-     *
-     * @throws \BadMethodCallException If unserializing is attempted.
-     */
-    public function __wakeup() {
-        throw new \BadMethodCallException( 'Unserializing is not allowed' );
-    }
 
     /**
      * Protected constructor to prevent creating a new instance
@@ -164,6 +133,20 @@ class Invoker implements Invoker_Interface {
     }
 
     /**
+     * Check if the handler is invoked.
+     *
+     * @param  string $handler The handler to check.
+     * @return bool
+     */
+    private function has_handler( string|false $handler ) {
+        if ( ! $handler ) {
+            return true;
+        }
+
+        return isset( $this->handlers[ $handler ] ) && $this->handlers[ $handler ]->initialized;
+    }
+
+    /**
      * Get the registered hooks.
      *
      * @param  string|null $handler The key to get the hooks for.
@@ -229,7 +212,7 @@ class Invoker implements Invoker_Interface {
      * @return Initializable
      */
     public function create_handler( object $instance ): Initializable {
-        if ( $instance instanceof Handler ) {
+        if ( Reflection::class_implements( $instance, Initializable::class ) ) {
             return $instance;
         }
 
@@ -256,11 +239,11 @@ class Invoker implements Invoker_Interface {
      *
      * Used for loading handlers that are not decorated.
      *
-     * @param object $instance Object to load as a handler.
+     * @param  object $instance Object to load as a handler.
      *
      * @throws \InvalidArgumentException If the object is decorated.
      */
-    public function load_handler( object $instance, ) {
+    public function load_handler( object $instance ): static {
         $handler = $this->create_handler( $instance );
 
         if ( isset( $this->handlers[ $handler->classname ] ) ) {
@@ -273,24 +256,6 @@ class Invoker implements Invoker_Interface {
         return $this
             ->register_methods( $handler )
             ->invoke_methods( $handler );
-    }
-
-    /**
-     * Load hooks for a handler.
-     *
-     * @param Initializable $handler The handler to load hooks for.
-     * @param array         $hooks   The hooks to load.
-     */
-    public function load_hooks( Initializable $handler, array $hooks ): static {
-        $this->handlers[ $handler->classname ] ??= $handler;
-
-        if ( \count( $this->hooks[ $handler->classname ] ?? array() ) ) {
-            return $this;
-        }
-
-        $this->hooks[ $handler->classname ] = $hooks;
-
-        return $this;
     }
 
     /**
@@ -364,7 +329,7 @@ class Invoker implements Invoker_Interface {
      *
      * @param  Initializable $handler Handler to register methods for.
      */
-    private function register_methods( Initializable $handler ) {
+    public function register_methods( Initializable $handler ) {
         if ( \count( $this->hooks[ $handler->classname ] ) > 0 ) {
             return $this;
         }
@@ -385,11 +350,11 @@ class Invoker implements Invoker_Interface {
     /**
      * Register a method.
      *
-     * @param  Initializable    $handler The handler to register the method for.
-     * @param  ReflectionMethod $m       The method to register.
+     * @param  Initializable     $handler The handler to register the method for.
+     * @param  \ReflectionMethod $m       The method to register.
      * @return array<Invokable>
      */
-    private function register_method( Initializable $handler, ReflectionMethod $m ) {
+    private function register_method( Initializable $handler, \ReflectionMethod $m ) {
         $hooks  = array();
         $target = array( $handler->target, $m->getName() );
 
@@ -414,6 +379,24 @@ class Invoker implements Invoker_Interface {
                 $this->invoke_hook( $hook );
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * Load hooks for a handler.
+     *
+     * @param Initializable $handler The handler to load hooks for.
+     * @param array         $hooks   The hooks to load.
+     */
+    public function load_hooks( Initializable $handler, array $hooks ): static {
+        $this->handlers[ $handler->classname ] ??= $handler;
+
+        if ( \count( $this->hooks[ $handler->classname ] ?? array() ) ) {
+            return $this;
+        }
+
+        $this->hooks[ $handler->classname ] = $hooks;
 
         return $this;
     }
@@ -472,20 +455,6 @@ class Invoker implements Invoker_Interface {
         }
 
         return $this->has_hook( $hook->requires[0], $hook->requires[1] );
-    }
-
-    /**
-     * Check if the handler is invoked.
-     *
-     * @param  string $handler The handler to check.
-     * @return bool
-     */
-    private function has_handler( string|false $handler ) {
-        if ( ! $handler ) {
-            return true;
-        }
-
-        return isset( $this->handlers[ $handler ] ) && $this->handlers[ $handler ]->initialized;
     }
 
     /**
