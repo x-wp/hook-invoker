@@ -4,27 +4,27 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cc2b88792f2f41151534a3c2f1064b35",
+    "content-hash": "cf93fba7e9a66756d74a74a6391017b1",
     "packages": [
         {
             "name": "automattic/jetpack-constants",
-            "version": "v2.0.1",
+            "version": "v2.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Automattic/jetpack-constants.git",
-                "reference": "b159a8777450721a2e898a80930be1fdf59bae92"
+                "reference": "6f7991f9e4475d4e2c3fd843111abfadb8a8c187"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Automattic/jetpack-constants/zipball/b159a8777450721a2e898a80930be1fdf59bae92",
-                "reference": "b159a8777450721a2e898a80930be1fdf59bae92",
+                "url": "https://api.github.com/repos/Automattic/jetpack-constants/zipball/6f7991f9e4475d4e2c3fd843111abfadb8a8c187",
+                "reference": "6f7991f9e4475d4e2c3fd843111abfadb8a8c187",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.0"
             },
             "require-dev": {
-                "automattic/jetpack-changelogger": "^4.1.1",
+                "automattic/jetpack-changelogger": "^4.2.2",
                 "brain/monkey": "2.6.1",
                 "yoast/phpunit-polyfills": "1.1.0"
             },
@@ -53,22 +53,127 @@
             ],
             "description": "A wrapper for defining constants in a more testable way.",
             "support": {
-                "source": "https://github.com/Automattic/jetpack-constants/tree/v2.0.1"
+                "source": "https://github.com/Automattic/jetpack-constants/tree/v2.0.2"
             },
-            "time": "2024-03-12T22:00:13+00:00"
+            "time": "2024-04-30T19:01:57+00:00"
         },
         {
-            "name": "x-wp/hook-contracts",
-            "version": "v1.0.2",
+            "name": "x-wp/helper-classes",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/x-wp/hook-contracts.git",
-                "reference": "ece4d6c133a6c70b1bd8762f27a7744fc88e4671"
+                "url": "https://github.com/x-wp/helper-classes.git",
+                "reference": "ef3c62875d20b89eaaf78a3b0f3d79d962dd2030"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/x-wp/hook-contracts/zipball/ece4d6c133a6c70b1bd8762f27a7744fc88e4671",
-                "reference": "ece4d6c133a6c70b1bd8762f27a7744fc88e4671",
+                "url": "https://api.github.com/repos/x-wp/helper-classes/zipball/ef3c62875d20b89eaaf78a3b0f3d79d962dd2030",
+                "reference": "ef3c62875d20b89eaaf78a3b0f3d79d962dd2030",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "x-wp/helper-traits": "^1"
+            },
+            "suggest": {
+                "automattic/jetpack-autoloader": "Allow for better interoperability with other plugins that use this package."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "XWP\\Helper\\Classes\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "Sibin Grasic",
+                    "email": "sibin.grasic@oblak.studio"
+                }
+            ],
+            "description": "Generic abstraction related to xWP packages",
+            "keywords": [
+                "abstractions",
+                "contracts",
+                "decoupling",
+                "extended-wp",
+                "interfaces",
+                "interoperability",
+                "standards"
+            ],
+            "support": {
+                "issues": "https://github.com/x-wp/helper-classes/issues",
+                "source": "https://github.com/x-wp/helper-classes/tree/v1.3.0"
+            },
+            "time": "2024-05-31T04:26:38+00:00"
+        },
+        {
+            "name": "x-wp/helper-traits",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/x-wp/helper-traits.git",
+                "reference": "b99bcb6f2fadeedba30fc63abe39aa8e88e0949f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/x-wp/helper-traits/zipball/b99bcb6f2fadeedba30fc63abe39aa8e88e0949f",
+                "reference": "b99bcb6f2fadeedba30fc63abe39aa8e88e0949f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "suggest": {
+                "automattic/jetpack-autoloader": "Allow for better interoperability with other plugins that use this package."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "XWP\\Helper\\Traits\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "Sibin Grasic",
+                    "email": "sibin.grasic@oblak.studio"
+                }
+            ],
+            "description": "Various traits related to xWP packages",
+            "keywords": [
+                "contracts",
+                "decoupling",
+                "extended-wp",
+                "interfaces",
+                "interoperability",
+                "standards",
+                "traits"
+            ],
+            "support": {
+                "issues": "https://github.com/x-wp/helper-traits/issues",
+                "source": "https://github.com/x-wp/helper-traits/tree/v1.3.0"
+            },
+            "time": "2024-05-26T16:39:47+00:00"
+        },
+        {
+            "name": "x-wp/hook-contracts",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/x-wp/hook-contracts.git",
+                "reference": "1c22d5220d35e32fa1eb7ddb7c44a67d34329737"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/x-wp/hook-contracts/zipball/1c22d5220d35e32fa1eb7ddb7c44a67d34329737",
+                "reference": "1c22d5220d35e32fa1eb7ddb7c44a67d34329737",
                 "shasum": ""
             },
             "require": {
@@ -106,9 +211,9 @@
             ],
             "support": {
                 "issues": "https://github.com/x-wp/hook-contracts/issues",
-                "source": "https://github.com/x-wp/hook-contracts/tree/v1.0.2"
+                "source": "https://github.com/x-wp/hook-contracts/tree/v1.2.0"
             },
-            "time": "2024-03-31T23:15:56+00:00"
+            "time": "2024-05-08T00:18:53+00:00"
         }
     ],
     "packages-dev": [
@@ -308,28 +413,28 @@
         },
         {
             "name": "phpcompatibility/phpcompatibility-paragonie",
-            "version": "1.3.2",
+            "version": "1.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCompatibility/PHPCompatibilityParagonie.git",
-                "reference": "bba5a9dfec7fcfbd679cfaf611d86b4d3759da26"
+                "reference": "293975b465e0e709b571cbf0c957c6c0a7b9a2ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCompatibility/PHPCompatibilityParagonie/zipball/bba5a9dfec7fcfbd679cfaf611d86b4d3759da26",
-                "reference": "bba5a9dfec7fcfbd679cfaf611d86b4d3759da26",
+                "url": "https://api.github.com/repos/PHPCompatibility/PHPCompatibilityParagonie/zipball/293975b465e0e709b571cbf0c957c6c0a7b9a2ac",
+                "reference": "293975b465e0e709b571cbf0c957c6c0a7b9a2ac",
                 "shasum": ""
             },
             "require": {
                 "phpcompatibility/php-compatibility": "^9.0"
             },
             "require-dev": {
-                "dealerdirect/phpcodesniffer-composer-installer": "^0.7",
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
                 "paragonie/random_compat": "dev-master",
                 "paragonie/sodium_compat": "dev-master"
             },
             "suggest": {
-                "dealerdirect/phpcodesniffer-composer-installer": "^0.7 || This Composer plugin will sort out the PHP_CodeSniffer 'installed_paths' automatically.",
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0 || This Composer plugin will sort out the PHP_CodeSniffer 'installed_paths' automatically.",
                 "roave/security-advisories": "dev-master || Helps prevent installing dependencies with known security issues."
             },
             "type": "phpcodesniffer-standard",
@@ -359,9 +464,24 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPCompatibility/PHPCompatibilityParagonie/issues",
+                "security": "https://github.com/PHPCompatibility/PHPCompatibilityParagonie/security/policy",
                 "source": "https://github.com/PHPCompatibility/PHPCompatibilityParagonie"
             },
-            "time": "2022-10-25T01:46:02+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/PHPCompatibility",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/jrfnl",
+                    "type": "github"
+                },
+                {
+                    "url": "https://opencollective.com/php_codesniffer",
+                    "type": "open_collective"
+                }
+            ],
+            "time": "2024-04-24T21:30:46+00:00"
         },
         {
             "name": "phpcompatibility/phpcompatibility-wp",
@@ -556,16 +676,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.27.0",
+            "version": "1.29.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "86e4d5a4b036f8f0be1464522f4c6b584c452757"
+                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/86e4d5a4b036f8f0be1464522f4c6b584c452757",
-                "reference": "86e4d5a4b036f8f0be1464522f4c6b584c452757",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/536889f2b340489d328f5ffb7b02bb6b183ddedc",
+                "reference": "536889f2b340489d328f5ffb7b02bb6b183ddedc",
                 "shasum": ""
             },
             "require": {
@@ -597,9 +717,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.27.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.29.0"
             },
-            "time": "2024-03-21T13:14:53+00:00"
+            "time": "2024-05-06T12:04:23+00:00"
         },
         {
             "name": "slevomat/coding-standard",

@@ -8,7 +8,9 @@
 
 namespace XWP\Hook\Debug;
 
-use XWP\Contracts\Hook\Hook_Interface;
+use XWP\Contracts\Hook\Hookable;
+use XWP\Contracts\Hook\Initializable;
+use XWP\Contracts\Hook\Invokable;
 use XWP\Hook\Invoker;
 
 /**
@@ -47,10 +49,6 @@ class Debug_Panel extends \Debug_Bar_Panel {
         foreach ( $executor->get_handlers() as $handler => $data ) {
             $this->render_handler( $handler, $data );
 
-            if ( ! $data->invoked ) {
-                continue;
-            }
-
             $this->render_hooks( $executor->get_hooks( $handler ) );
 
         }
@@ -61,10 +59,10 @@ class Debug_Panel extends \Debug_Bar_Panel {
     /**
      * Render the handler
      *
-     * @param  string         $handler Handler name.
-     * @param  Hook_Interface $data    Handler data.
+     * @param  string        $handler Handler name.
+     * @param  Initializable $data    Handler data.
      */
-    private function render_handler( string $handler, Hook_Interface $data ) {
+    private function render_handler( string $handler, Initializable $data ) {
         $reflector = new \ReflectionClass( $handler );
         echo '<h3>' . \wp_kses_post( $this->render_handler_header( $reflector, $data ) ) . '</h3>' . "\n";
     }
@@ -72,7 +70,7 @@ class Debug_Panel extends \Debug_Bar_Panel {
     /**
      * Render the hooks
      *
-     * @param  array<class-string, array<Hook_Interface>> $hook_data  Hooks data.
+     * @param  array<class-string, array<Invokable>> $hook_data  Hooks data.
      */
     private function render_hooks( $hook_data ) {
         if ( ! $hook_data ) {
@@ -96,16 +94,16 @@ class Debug_Panel extends \Debug_Bar_Panel {
     /**
      * Render the hook
      *
-     * @param  Hook_Interface $hook Hook data.
+     * @param  Invokable $hook Hook data.
      */
-    private function render_hook( Hook_Interface $hook ) {
+    private function render_hook( Invokable $hook ) {
         \printf(
             '<li style="font-size: 15px" >%s %s on <strong>%s</strong> with priority %s (%s)</li>' . "\n",
             \esc_html( $hook::HOOK_TYPE ),
             \esc_html( $hook->invoked ? 'invoked' : 'registered' ),
             \esc_html( $hook->tag ),
             \esc_html( $hook->priority ),
-            \esc_html( $hook->get_priority() ),
+            \esc_html( $hook->real_priority ),
         );
     }
 
@@ -113,15 +111,15 @@ class Debug_Panel extends \Debug_Bar_Panel {
      * Render the handler header
      *
      * @param  \ReflectionClass $r    Reflection class.
-     * @param  Hook_Interface   $hook Hook data.
+     * @param  Initializable    $hook Hook data.
      * @return string
      */
-    private function render_handler_header( \ReflectionClass $r, Hook_Interface $hook ): string {
+    private function render_handler_header( \ReflectionClass $r, Initializable $hook ): string {
         return \sprintf(
             '<a href="%s"><strong>%s</strong></a> &ndash; %s',
             $this->get_file_path( $r->getFileName() ),
             $r->getName(),
-            $hook->invoked ? 'invoked' : 'registered',
+            $hook->initialized ? 'Initialized' : 'registered',
         );
     }
 

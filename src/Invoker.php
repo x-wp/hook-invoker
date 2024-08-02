@@ -1,36 +1,37 @@
-<?php
+<?php // phpcs:disable SlevomatCodingStandard.Operators.SpreadOperatorSpacing.IncorrectSpacesAfterOperator
 /**
  * Invoker class file.
  *
- * @package eXtended WordPress-DI
- * @subpackage Services
+ * @package eXtended WordPress
+ * @subpackage Hook Invoker
  */
 
 namespace XWP\Hook;
 
 use Automattic\Jetpack\Constants;
+use ReflectionMethod;
 use XWP\Contracts\Hook\Context;
 use XWP\Contracts\Hook\Context_Interface;
-use XWP\Contracts\Hook\Hook_Interface;
+use XWP\Contracts\Hook\Hookable;
+use XWP\Contracts\Hook\Initializable;
+use XWP\Contracts\Hook\Initialize;
+use XWP\Contracts\Hook\Invokable;
 use XWP\Contracts\Hook\Invoker_Interface;
+use XWP\Helper\Traits\Singleton;
+use XWP\Hook\Decorators\Handler;
 
 /**
  * Executes the registered handlers.
  */
 class Invoker implements Invoker_Interface {
-    /**
-     * Hook manager instance.
-     *
-     * @var Invoker|null
-     */
-    private static ?Invoker $instance = null;
+    use Singleton;
 
     /**
      * Current execution context.
      *
      * @var Context
      */
-    private Context $context;
+    public readonly Context $context;
 
     /**
      * Is the manager initialized.
@@ -47,52 +48,18 @@ class Invoker implements Invoker_Interface {
     private readonly string|false $killswitch;
 
     /**
-     * Handler instances
-     *
-     * @var array<string, object>
-     */
-    private array $objects = array();
-
-    /**
      * Array of handler data
      *
-     * @var array<string, Hook_Interface>
+     * @var array<string, Initializable>
      */
     private array $handlers = array();
 
     /**
      * Array of registered hooks.
      *
-     * @var array<string, array<string, Hook_Interface>>
+     * @var array<string, array<string, Invokable>>
      */
     public array $hooks = array();
-
-    /**
-     * Get the instance of the Hook Manager.
-     *
-     * @return Invoker
-     */
-    public static function instance(): static {
-        return static::$instance ??= new static();
-    }
-
-    /**
-     * Prevent cloning
-     *
-     * @throws \BadMethodCallException If cloning is attempted.
-     */
-    public function __clone() {
-        throw new \BadMethodCallException( 'Cloning is not allowed' );
-    }
-
-    /**
-     * Prevent unserializing
-     *
-     * @throws \BadMethodCallException If unserializing is attempted.
-     */
-    public function __wakeup() {
-        throw new \BadMethodCallException( 'Unserializing is not allowed' );
-    }
 
     /**
      * Protected constructor to prevent creating a new instance
@@ -127,10 +94,10 @@ class Invoker implements Invoker_Interface {
     /**
      * Checks if the killswitch is set.
      *
-     * @param Hook_Interface $hook The hook to check.
+     * @param Hookable $hook The hook to check.
      * @return bool
      */
-    private function has_killswitch( Hook_Interface $hook ): bool {
+    private function has_killswitch( Hookable $hook ): bool {
         return ! $this->killswitch
             ? false
             : $this->check_killswitch( $hook );
@@ -139,10 +106,10 @@ class Invoker implements Invoker_Interface {
     /**
      * Actually check the killswitch.
      *
-     * @param  Hook_Interface $hook The hook to check.
+     * @param  Hookable $hook The hook to check.
      * @return bool
      */
-    private function check_killswitch( Hook_Interface $hook ): bool {
+    private function check_killswitch( Hookable $hook ): bool {
         $target = \is_array( $hook->target ) ? $hook->target[0] : $hook->target;
 
         if ( \str_contains( 'XWP\Debug', $target ) ) {
@@ -159,10 +126,24 @@ class Invoker implements Invoker_Interface {
     /**
      * Get the registered handlers.
      *
-     * @return array<class-string, Hook_Interface>
+     * @return array<class-string, Initializable>
      */
     public function get_handlers(): array {
         return $this->handlers;
+    }
+
+    /**
+     * Check if the handler is invoked.
+     *
+     * @param  string $handler The handler to check.
+     * @return bool
+     */
+    private function has_handler( string|false $handler ) {
+        if ( ! $handler ) {
+            return true;
+        }
+
+        return isset( $this->handlers[ $handler ] ) && $this->handlers[ $handler ]->initialized;
     }
 
     /**
@@ -191,11 +172,23 @@ class Invoker implements Invoker_Interface {
     /**
      * Check if the context is valid.
      *
-     * @param  Hook_Interface $hook The context to check.
+     * @param  Hookable $hook The context to check.
      * @return bool
      */
-    private function is_valid_context( Hook_Interface $hook ): bool {
+    private function is_valid_context( Hookable $hook ): bool {
         return $this->context->is_valid( $hook->context );
+    }
+
+    /**
+     * Set a handler.
+     *
+     * @param  Initializable $handler The handler to set.
+     * @return static
+     */
+    private function set_handler( Initializable $handler ): static {
+        $this->handlers[ $handler->classname ] = $handler;
+
+        return $this;
     }
 
     /**
@@ -213,30 +206,120 @@ class Invoker implements Invoker_Interface {
     }
 
     /**
-     * Register a handler.
+     * Create a handler from a class instance.
      *
-     * @param  string|object $handler The handler to register.
-     * @return static
+     * @param  object $instance The instance to create a handler for.
+     * @return Initializable
      */
-    public function register_handler( string $handler ): static {
-        $refl = $this->get_reflector( $handler );
-        $hook = $this->get_decorator_instance( $refl );
-        $prio = $hook->get_priority();
+    public function create_handler( object $instance ): Initializable {
+        if ( Reflection::class_implements( $instance, Initializable::class ) ) {
+            return $instance;
+        }
 
-        $hook->target = $handler;
+        if ( isset( $this->handlers[ $instance::class ] ) ) {
+            return $this->handlers[ $instance::class ];
+        }
 
-        $this->handlers[ $handler ] = $hook;
+        $reflector = Reflection::get_reflector( $instance );
+        $handler   = Reflection::get_decorator( $reflector, Initializable::class );
 
-        if ( ! $this->can_register( $hook ) ) {
+        if ( ! $handler ) {
+            $handler = new Handler( strategy: Initialize::Dynamically );
+        }
+
+        return $handler
+            ->set_classname( $reflector->getName() )
+            ->set_target( $instance )
+            ->set_reflector( $reflector )
+            ->initialize();
+    }
+
+    /**
+     * Loads an object as a handler.
+     *
+     * Used for loading handlers that are not decorated.
+     *
+     * @param  object $instance Object to load as a handler.
+     *
+     * @throws \InvalidArgumentException If the object is decorated.
+     */
+    public function load_handler( object $instance ): static {
+        $handler = $this->create_handler( $instance );
+
+        if ( isset( $this->handlers[ $handler->classname ] ) ) {
             return $this;
         }
 
-        \add_action(
-            $hook->tag,
-            fn() => $this->invoke_handler( $handler, $refl, $hook ),
-            $prio,
-            0,
-        );
+        $this->handlers[ $handler->classname ] = $handler;
+        $this->hooks[ $handler->classname ]    = array();
+
+        return $this
+            ->register_methods( $handler )
+            ->invoke_methods( $handler );
+    }
+
+    /**
+     * Register a handler.
+     *
+     * @param  string|object $classname The handler to register.
+     * @return static
+     */
+    public function register_handler( string $classname ): static {
+        $refl = Reflection::get_reflector( $classname );
+
+        $handler = Reflection::get_decorator( $refl, Initializable::class )
+            ->set_classname( $classname )
+            ->set_reflector( $refl );
+
+        $this->handlers[ $classname ] = $handler;
+        $this->hooks[ $classname ]    = array();
+
+        switch ( $handler->strategy ) {
+            case Initialize::Immediately:
+                return $this
+                    ->initialize_handler( $handler )
+                    ->register_methods( $handler )
+                    ->invoke_methods( $handler );
+
+            case Initialize::OnDemand:
+            case Initialize::JustInTime:
+                return $this
+                    ->set_handler( $handler )
+                    ->register_methods( $handler )
+                    ->invoke_methods( $handler );
+
+            case Initialize::Early:
+                $this->initialize_handler( $handler );
+
+                $callback = fn() => $this
+                    ->register_methods( $handler )
+                    ->invoke_methods( $handler );
+                break;
+
+            default:
+                $callback = fn() => $this
+                    ->initialize_handler( $handler )
+                    ->register_methods( $handler )
+                    ->invoke_methods( $handler );
+                break;
+        }
+
+        \add_action( $handler->tag, $callback, $handler->real_priority, 0 );
+
+        return $this;
+    }
+
+    /**
+     * Initializes the handler.
+     *
+     * @param Initializable $handler Handler to initialize.
+     */
+    private function initialize_handler( Initializable $handler ) {
+        if ( ! $this->can_activate( $handler ) || ! $handler->can_initialize() ) {
+            return $this;
+        }
+
+        $handler->initialize();
 
         return $this;
     }
@@ -244,38 +327,95 @@ class Invoker implements Invoker_Interface {
     /**
      * Invokes the handler.
      *
-     * @param  string           $handler The handler to invoke.
-     * @param  \ReflectionClass $refl    The reflector for the handler.
-     * @param  Hook_Interface   $hook    The hook to invoke.
+     * @param  Initializable $handler Handler to register methods for.
      */
-    private function invoke_handler( string $handler, \ReflectionClass $refl, Hook_Interface $hook ) {
-        if ( ! $this->can_invoke( $hook ) ) {
-            return;
+    public function register_methods( Initializable $handler ) {
+        if ( \count( $this->hooks[ $handler->classname ] ) > 0 ) {
+            return $this;
         }
 
-        $this->objects[ $handler ] ??= new $handler();
+        foreach ( Reflection::get_hookable_methods( $handler->reflector ) as $m ) {
+            $hooks = $this->register_method( $handler, $m );
 
-        $this->handlers[ $handler ]->invoked = true;
+            if ( ! $hooks ) {
+                continue;
+            }
 
-        $this->register_handler_methods( $refl );
+            $this->hooks[ $handler->classname ][ $m->getName() ] = $hooks;
+        }
+
+        return $this;
     }
 
     /**
-     * Checks if a handler/hook can be registered.
+     * Register a method.
      *
-     * Handlers can be registered when:
-     *  * The context is valid
-     *  * Handler has a can_register static method that returns true
-     *
-     * Hooks can be registered when:
-     *  * The context is valid
-     *
-     * @param  Hook_Interface $hook The hook to check.
-     * @return bool
+     * @param  Initializable     $handler The handler to register the method for.
+     * @param  \ReflectionMethod $m       The method to register.
+     * @return array<Invokable>
      */
-    private function can_register( Hook_Interface $hook ): bool {
-        return $this->is_valid_context( $hook ) &&
-            $this->can_activate( $hook, 'can_register' );
+    private function register_method( Initializable $handler, \ReflectionMethod $m ) {
+        $hooks  = array();
+        $target = array( $handler->target, $m->getName() );
+
+        foreach ( Reflection::get_decorators( $m, Invokable::class ) as $hook ) {
+            $hooks[] = $hook
+                ->set_handler( $handler )
+                ->set_target( $target )
+                ->set_reflector( $m );
+        }
+
+        return $hooks;
+    }
+
+    /**
+     * Invoke the methods for a handler.
+     *
+     * @param  Initializable $handler The handler to invoke methods for.
+     */
+    public function invoke_methods( Initializable $handler ) {
+		foreach ( $this->hooks[ $handler->classname ] as $hooks ) {
+            foreach ( $hooks as $hook ) {
+                $this->invoke_hook( $hook );
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Load hooks for a handler.
+     *
+     * @param Initializable $handler The handler to load hooks for.
+     * @param array         $hooks   The hooks to load.
+     */
+    public function load_hooks( Initializable $handler, array $hooks ): static {
+        $this->handlers[ $handler->classname ] ??= $handler;
+
+        if ( \count( $this->hooks[ $handler->classname ] ?? array() ) ) {
+            return $this;
+        }
+
+        $this->hooks[ $handler->classname ] = $hooks;
+
+        return $this;
+    }
+
+    /**
+     * Invoke a hook.
+     *
+     * @param  Invokable $hook The hook to invoke.
+     */
+    private function invoke_hook( Invokable $hook ) {
+        if (
+            ! $this->is_valid_context( $hook ) ||
+            ! $this->is_valid_context( $hook->handler ) ||
+            ! $hook->can_invoke()
+        ) {
+            return;
+        }
+
+        $hook->invoke();
     }
 
     /**
@@ -290,23 +430,22 @@ class Invoker implements Invoker_Interface {
      *  * Hook requirements are met
      *  * Conditional check returns true
      *
-     * @param  Hook_Interface $hook The hook to check.
+     * @param  Hookable $hook The hook to check.
      * @return bool
      */
-    public function can_invoke( Hook_Interface $hook ): bool {
+    public function can_activate( Hookable $hook ): bool {
         return ! $this->has_killswitch( $hook ) &&
             $this->has_dependency( $hook ) &&
-            $this->can_activate( $hook, 'can_invoke' ) &&
-            $this->conditional_check( $hook );
+            $this->is_valid_context( $hook );
     }
 
     /**
      * Check if a hook has a listed dependency.
      *
-     * @param  Hook_Interface $hook The hook to check.
+     * @param  Hookable $hook The hook to check.
      * @return bool
      */
-    private function has_dependency( Hook_Interface $hook ): bool {
+    private function has_dependency( Hookable $hook ): bool {
         if ( ! $hook->requires ) {
             return true;
         }
@@ -316,39 +455,6 @@ class Invoker implements Invoker_Interface {
         }
 
         return $this->has_hook( $hook->requires[0], $hook->requires[1] );
-    }
-
-    /**
-     * Check if the handler has a `can_register` or `can_invoke` method
-     *
-     * @param  Hook_Interface $hook   The hook to check.
-     * @param  string         $method The method to check.
-     * @return bool
-     */
-    private function can_activate( Hook_Interface $hook, string $method = 'can_register' ): bool {
-        $target = $hook->target;
-        if ( \is_array( $target ) ) {
-            $method .= '_' . $target[1];
-            $target  = $target[0];
-        }
-
-        $has_method = \method_exists( $target, $method );
-
-        return ! $has_method || ( $has_method && $target::$method() );
-    }
-
-    /**
-     * Check if the handler is invoked.
-     *
-     * @param  string $handler The handler to check.
-     * @return bool
-     */
-    private function has_handler( string|false $handler ) {
-        if ( ! $handler ) {
-            return true;
-        }
-
-        return isset( $this->handlers[ $handler ] ) && $this->handlers[ $handler ]->invoked;
     }
 
     /**
@@ -364,234 +470,5 @@ class Invoker implements Invoker_Interface {
         }
 
         return isset( $this->hooks[ $handler ][ $method ] ) && $this->hooks[ $handler ][ $method ]->invoked;
-    }
-
-    /**
-     * Run a conditional check on the hook.
-     *
-     * @param  Hook_Interface $hook The hook to check.
-     * @return bool
-     */
-    private function conditional_check( Hook_Interface $hook ): bool {
-        return $hook->conditional ? ( $hook->conditional )() : true;
-    }
-
-    /**
-     * Register the handler methods.
-     *
-     * @param  object|\ReflectionClass $handler The reflector for the handler.
-     * @return static
-     */
-    public function register_handler_methods( object $handler ): static {
-        if ( \is_object( $handler ) && ! isset( $this->objects[ $handler::class ] ) ) {
-            $this->objects[ $handler::class ] = $handler;
-        }
-
-        $refl   = $this->get_reflector( $handler );
-        $h_name = $refl->getName();
-
-        foreach ( $this->get_hooked_methods( $refl ) as $m ) {
-            $this->invoke_hooks(
-                $h_name,
-                $m->getName(),
-                $m->getNumberOfParameters(),
-                $this->get_decorators( $m ),
-            );
-        }
-
-        return $this;
-    }
-
-    /**
-     * Invoke the hooks for the handler.
-     *
-     * @param  string $handler    The handler to invoke the hooks for.
-     * @param  string $method     The method to invoke the hooks for.
-     * @param  int    $args       The number of arguments the method accepts.
-     * @param  array  $decorators The decorators to invoke.
-     */
-    private function invoke_hooks( string $handler, string $method, int $args, array $decorators ) {
-        foreach ( $decorators as $decorator ) {
-            $hook = $decorator->newInstance();
-
-            $this->hooks[ $handler ][ $method ][] = $this->invoke_hook( $handler, $method, $hook, $args );
-        }
-    }
-
-    /**
-     * Invoke a hook.
-     *
-     * @param  string         $handler The handler to invoke the hook for.
-     * @param  string         $method  The method to invoke the hook for.
-     * @param  Hook_Interface $hook    The hook to invoke.
-     * @param  int            $args    The number of arguments the method accepts.
-     */
-    private function invoke_hook( string $handler, string $method, Hook_Interface $hook, int $args ): Hook_Interface {
-        $callback = 'add_' . $hook::HOOK_TYPE;
-        $priority = $hook->get_priority();
-
-        $hook->target = array( $handler, $method );
-
-        if ( $this->can_invoke( $hook ) ) {
-            $callback( $hook->tag, array( $this->objects[ $handler ], $method ), $priority, $args );
-            $hook->invoked = true;
-        }
-
-        return $hook;
-    }
-
-    /**
-     * Get the hooked methods for a handler.
-     *
-     * @param  \ReflectionClass $reflector The reflector for the handler.
-     * @return array
-     */
-    private function get_hooked_methods( \ReflectionClass $reflector ): array {
-        $methods = \array_filter(
-            $reflector->getMethods( $this->get_method_types( $reflector->getName() ) ),
-            array( $this, 'is_method_hookable' ),
-        );
-
-        return $methods;
-    }
-
-    /**
-     * Get the method types to include.
-     *
-     * @param  object|string $t The object or class name to get the method types for.
-     * @return int
-     */
-    private function get_method_types( object|string $t ): int {
-        $include = \ReflectionMethod::IS_PUBLIC | \ReflectionMethod::IS_STATIC;
-
-        if ( $this->has_accessible_trait( $t ) ) {
-            $include |= \ReflectionMethod::IS_PRIVATE | \ReflectionMethod::IS_PROTECTED;
-        }
-
-        return $include;
-    }
-
-    /**
-     * Check if a method is hookable.
-     *
-     * @param  \ReflectionMethod $m The method to check.
-     * @return bool
-     */
-    private function is_method_hookable( \ReflectionMethod $m, ): bool {
-        $ignore = array( '__call', '__callStatic', 'check_method_access', 'is_method_valid', 'get_registered_hooks', '__construct' );
-        return ! \in_array( $m->getName(), $ignore, true ) && ( ! $m->isStatic() );
-    }
-
-    /**
-     * Check if the object has the accessible trait.
-     *
-     * @param  object|string $obj The object to check.
-     * @return bool
-     */
-    private function has_accessible_trait( object|string $obj ): bool {
-        return \in_array( 'XWP\Contracts\Hook\Accessible_Hook_Methods', $this->class_uses_deep( $obj ), true );
-    }
-
-    /**
-     * Get all the traits used by a class.
-     *
-     * @param  string|object $target Class or object to get the traits for.
-     * @param  bool          $autoload        Whether to allow this function to load the class automatically through the __autoload() magic method.
-     * @return array                          Array of traits.
-     */
-	private function class_uses_deep( string|object $target, bool $autoload = true ) {
-		$traits = array();
-
-		do {
-			$traits = \array_merge( \class_uses( $target, $autoload ), $traits );
-            $target = \get_parent_class( $target );
-		} while ( $target );
-
-		foreach ( $traits as $trait ) {
-			$traits = \array_merge( \class_uses( $trait, $autoload ), $traits );
-		}
-
-		return \array_values( \array_unique( $traits ) );
-	}
-
-    /**
-     * Get the handler meta.
-     *
-     * @param  string|object $handler The handler to get the meta from.
-     * @return Hook_Interface|null
-     */
-    private function get_decorator_instance( string|object $handler ) {
-        return $this->
-            get_decorator(
-                $this->get_reflector( $handler ),
-            )?->newInstance();
-    }
-
-    /**
-     * Get the decorators from a reflector.
-     *
-     * @param  \ReflectionClass|\ReflectionMethod|\ReflectionFunction $r The reflector to get the decorator from.
-     * @return array
-     */
-    private function get_decorators( \Reflector $r ): array {
-        return $r->getAttributes( Hook_Interface::class, \ReflectionAttribute::IS_INSTANCEOF );
-    }
-
-    /**
-     * Get the decorator from a reflector.
-     *
-     * @param  \Reflector $r The reflector to get the decorator from.
-     * @return \ReflectionAttribute|null
-     */
-    private function get_decorator( \Reflector $r ): ?\ReflectionAttribute {
-        return \current( $this->get_decorators( $r ) ) ?: null; //phpcs:ignore
-    }
-
-    /**
-     * Get the reflector for a target.
-     *
-     * @param  mixed $target The target to get the reflector for.
-     * @return \ReflectionClass|\ReflectionMethod|\ReflectionFunction
-     *
-     * @throws \InvalidArgumentException If the target is invalid.
-     */
-    private function get_reflector( mixed $target ): \Reflector {
-        return match ( true ) {
-            $target instanceof \Reflector     => $target,
-            $this->is_valid_class( $target )    => new \ReflectionClass( $target ),
-            $this->is_valid_method( $target )   => new \ReflectionMethod( $target ),
-            $this->is_valid_function( $target ) => new \ReflectionFunction( $target ),
-            default => throw new \InvalidArgumentException( 'Invalid target' ),
-        };
-    }
-
-    /**
-     * Is the target a valid class.
-     *
-     * @param  mixed $target The target to check.
-     * @return bool
-     */
-    private function is_valid_class( mixed $target ): bool {
-        return \is_object( $target ) || \class_exists( $target );
-    }
-
-    /**
-     * Is the target a valid method.
-     *
-     * @param  mixed $target The target to check.
-     * @return bool
-     */
-    private function is_valid_method( mixed $target ): bool {
-        return \is_array( $target ) && $this->is_valid_class( $target[0] ) && \is_string( $target[1] );
-    }
-
-    /**
-     * Is the target a valid function.
-     *
-     * @param  mixed $target The target to check.
-     * @return bool
-     */
-    private function is_valid_function( mixed $target ): bool {
-        return \is_string( $target ) && \function_exists( $target );
     }
 }
