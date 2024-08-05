@@ -28,7 +28,8 @@ final class Context_Host {
             self::is_cron_request()     => Context::Cron,
             self::is_rest_request()     => Context::REST,
             self::is_frontend_request() => Context::Frontend,
-            self::is_cli_request()      => Context::CLI
+            self::is_cli_request()      => Context::CLI,
+            default                     => Context::Frontend,
         };
     }
 

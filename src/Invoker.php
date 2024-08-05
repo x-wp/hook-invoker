@@ -10,7 +10,6 @@ namespace XWP\Hook;
 
 use Automattic\Jetpack\Constants;
 use ReflectionMethod;
-use XWP\Contracts\Hook\Context;
 use XWP\Contracts\Hook\Context_Interface;
 use XWP\Contracts\Hook\Hookable;
 use XWP\Contracts\Hook\Initializable;
@@ -29,9 +28,9 @@ class Invoker implements Invoker_Interface {
     /**
      * Current execution context.
      *
-     * @var Context
+     * @var Context_Interface
      */
-    public readonly Context $context;
+    public readonly Context_Interface $context;
 
     /**
      * Is the manager initialized.

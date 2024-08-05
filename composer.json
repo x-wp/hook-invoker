@@ -27,7 +27,14 @@
     "x-wp/hook-contracts": "^1"
   },
   "require-dev": {
-    "oblak/wordpress-coding-standard": "^1"
+    "oblak/wordpress-coding-standard": "^1",
+    "php-stubs/woocommerce-stubs": "^9.0",
+    "php-stubs/wordpress-stubs": "^6.5",
+    "phpstan/extension-installer": "^1.3",
+    "phpstan/phpstan": "^1.10",
+    "phpstan/phpstan-deprecation-rules": "^1.1",
+    "swissspidy/phpstan-no-private": "^0.2.0",
+    "szepeviktor/phpstan-wordpress": "^1.3"
   },
   "provide": {
     "x-wp/hook-implementation": "1.0.0"
@@ -37,14 +44,17 @@
   },
   "autoload": {
     "psr-4": {
-      "XWP\\Hook\\": "src"
-    }
+      "XWP\\Hook\\": "src/"
+    },
+    "files": [
+      "src/Functions/xwp-hook-helper-fns.php"
+    ]
   },
   "config": {
     "allow-plugins": {
       "automattic/jetpack-autoloader": true,
       "dealerdirect/phpcodesniffer-composer-installer": true,
-      "ergebnis/composer-normalize": true
+      "phpstan/extension-installer": true
     },
     "sort-packages": true
   }
