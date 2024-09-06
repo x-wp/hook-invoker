@@ -18,7 +18,8 @@ final class Reflection extends \XWP\Helper\Classes\Reflection {
     /**
      * Get the hooked methods for a handler.
      *
-     * @param  \ReflectionClass $r The reflection class to get the methods for.
+     * @template T of object
+     * @param  \ReflectionClass<T> $r The reflection class to get the methods for.
      * @return array<Method>
      */
     public static function get_hookable_methods( \ReflectionClass $r ): array {
@@ -33,7 +34,7 @@ final class Reflection extends \XWP\Helper\Classes\Reflection {
     /**
      * Get the method types to include.
      *
-     * @param  array<string> $traits The traits to check.
+     * @param  array<class-string> $traits The traits to check.
      * @return int
      */
     public static function get_method_types( array $traits ): int {

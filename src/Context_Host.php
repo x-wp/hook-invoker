@@ -21,15 +21,15 @@ final class Context_Host {
      *
      * @return Context_Interface
      */
-    public static function get_context(): Context_Interface {
+    public static function get(): Context_Interface {
         return match ( true ) {
-            self::is_admin_request()    => Context::Admin,
-            self::is_ajax_request()     => Context::Ajax,
-            self::is_cron_request()     => Context::Cron,
-            self::is_rest_request()     => Context::REST,
-            self::is_frontend_request() => Context::Frontend,
-            self::is_cli_request()      => Context::CLI,
-            default                     => Context::Frontend,
+            self::admin()    => Context::Admin,
+            self::ajax()     => Context::Ajax,
+            self::cron()     => Context::Cron,
+            self::rest()     => Context::REST,
+            self::cli()      => Context::CLI,
+            self::frontend() => Context::Frontend,
+            default          => Context::Frontend,
         };
     }
 
@@ -40,7 +40,7 @@ final class Context_Host {
      * @return bool
      */
     public static function is_valid_context( int $context ): bool {
-        return 0 !== ( self::get_context()->value & $context );
+        return 0 !== ( self::get()->value & $context );
     }
 
     /**
@@ -48,8 +48,8 @@ final class Context_Host {
      *
      * @return bool
      */
-    public static function is_frontend_request(): bool {
-        return ! self::is_admin_request() && ! self::is_cron_request() && ! self::is_rest_request() && ! self::is_cli_request();
+    public static function frontend(): bool {
+        return ! self::admin() && ! self::cron() && ! self::rest() && ! self::cli();
     }
 
     /**
@@ -57,8 +57,8 @@ final class Context_Host {
      *
      * @return bool
      */
-    public static function is_admin_request(): bool {
-        return \is_admin() && ! self::is_ajax_request();
+    public static function admin(): bool {
+        return \is_admin() && ! self::ajax();
     }
 
     /**
@@ -66,7 +66,7 @@ final class Context_Host {
      *
      * @return bool
      */
-    public static function is_ajax_request(): bool {
+    public static function ajax(): bool {
         return Constants::is_true( 'DOING_AJAX' );
     }
 
@@ -75,7 +75,7 @@ final class Context_Host {
      *
      * @return bool
      */
-    public static function is_cron_request(): bool {
+    public static function cron(): bool {
         return Constants::is_true( 'DOING_CRON' );
     }
 
@@ -84,11 +84,10 @@ final class Context_Host {
      *
      * @return bool
      */
-    public static function is_rest_request(): bool {
+    public static function rest(): bool {
         $prefix = \trailingslashit( \rest_get_url_prefix() );
 
-        //phpcs:ignore
-        return \strpos( $_SERVER['REQUEST_URI'], $prefix) !== false;
+        return false !== \strpos( \xwp_fetch_server_var( 'REQUEST_URI', '' ), $prefix );
     }
 
     /**
@@ -96,7 +95,7 @@ final class Context_Host {
      *
      * @return bool
      */
-    public static function is_cli_request(): bool {
+    public static function cli(): bool {
         return Constants::is_true( 'WP_CLI' );
 	}
 }

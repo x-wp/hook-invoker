@@ -8,14 +8,20 @@
 
 namespace XWP\Hook\Decorators;
 
+use ReflectionClass;
+use ReflectionMethod;
 use XWP\Contracts\Hook\Context;
+use XWP\Contracts\Hook\Context_Interface;
 use XWP\Contracts\Hook\Hookable;
 use XWP\Hook\Context_Host;
 
 /**
  * Base hook from which the action and filter decorators inherit.
  *
- * @template T
+ * @template TGt
+ * @template THndlr of object
+ * @template TRflct of ReflectionClass<THndlr>|ReflectionMethod
+ * @implements Hookable<THndlr,TRflct>
  */
 abstract class Hook implements Hookable {
     /**
@@ -35,23 +41,23 @@ abstract class Hook implements Hookable {
     /**
      * Reflector instance.
      *
-     * @var \ReflectionClass<T>|\ReflectionMethod<T>
+     * @var TRflct
      */
-    protected \ReflectionClass|\ReflectionMethod $reflector;
-
-    /**
-     * Hook target.
-     *
-     * @var T|array{0: T, 1:method-string}
-     */
-    protected array|object $target;
+    protected ReflectionClass|ReflectionMethod $reflector;
 
     /**
      * Current context.
      *
-     * @var Context
+     * @var Context_Interface
      */
-    protected static Context $current_ctx;
+    protected static Context_Interface $current_ctx;
+
+    /**
+     * Handler target.
+     *
+     * @var TGt
+     */
+    protected $target;
 
     /**
      * Constructor.
@@ -63,12 +69,12 @@ abstract class Hook implements Hookable {
      *                                                       * String:  If a function exists with the name, it will be invoked, if not - will be treated as filter.
      * @param  int                             $context     Context bitmask determining where the hook can be invoked.
      * @param  array|string|\Closure|null|null $conditional Conditional to check if the hook should be invoked.
-     * @param  bool                            $requires    Prerequisite hook or handler that must be registered before this hook.
-     * @param  bool                            $modifiers   Replacement pairs for the tag name.
+     * @param  array|string|false              $requires    Prerequisite hook or handler that must be registered before this hook.
+     * @param  string|array|false              $modifiers   Replacement pairs for the tag name.
      */
     public function __construct(
         ?string $tag,
-        protected readonly array|int|string $priority = 10,
+        protected readonly array|int|string|\Closure|null $priority = null,
         protected readonly int $context = self::CTX_GLOBAL,
         protected readonly array|string|\Closure|null $conditional = null,
         protected readonly array|string|false $requires = false,
@@ -76,7 +82,7 @@ abstract class Hook implements Hookable {
     ) {
         $this->tag = $this->set_tag( $tag ?? '', $modifiers );
 
-        static::$current_ctx ??= Context_Host::get_context();
+        static::$current_ctx ??= Context_Host::get();
     }
 
     /**
@@ -97,12 +103,6 @@ abstract class Hook implements Hookable {
         return \vsprintf( $tag, $modifiers );
     }
 
-    public function set_target( array|object $target ): static {
-        $this->target ??= $target;
-
-        return $this;
-    }
-
     public function set_reflector( \Reflector $r ): static {
         $this->reflector ??= $r;
 
@@ -117,12 +117,12 @@ abstract class Hook implements Hookable {
     private function set_real_priority(): int {
         $prio = $this->priority;
         $prio = match ( true ) {
-            \defined( $prio )         => \constant( $prio ),
-            \is_numeric( $prio )      => (int) $prio,
-            \is_array( $prio )        => \call_user_func( $prio ),
-            \is_callable( $prio )     => $prio(),
-            \is_string( $prio )       => \apply_filters( $prio, 10, $this->tag ),
-            default                  => 10,
+            \defined( $prio )     => \constant( $prio ),
+            \is_numeric( $prio )  => (int) $prio,
+            \is_array( $prio )    => \call_user_func( $prio ),
+            \is_callable( $prio ) => $prio(),
+            \is_string( $prio )   => \apply_filters( $prio, 10, $this->tag ),
+            default               => 10,
         } ?? 10;
 
         $this->real_priority = (int) $prio;

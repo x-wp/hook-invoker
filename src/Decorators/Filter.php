@@ -8,6 +8,7 @@
 
 namespace XWP\Hook\Decorators;
 
+use ReflectionMethod;
 use XWP\Contracts\Hook\Initializable;
 use XWP\Contracts\Hook\Initialize;
 use XWP\Contracts\Hook\Invokable;
@@ -16,6 +17,10 @@ use XWP\Hook\Reflection;
 
 /**
  * Action decorator.
+ *
+ * @template THndlr of object
+ * @extends Hook<string,THndlr, ReflectionMethod>
+ * @implements Invokable<THndlr>
  */
 #[\Attribute( \Attribute::TARGET_FUNCTION | \Attribute::IS_REPEATABLE | \Attribute::TARGET_METHOD )]
 class Filter extends Hook implements Invokable {
@@ -50,9 +55,9 @@ class Filter extends Hook implements Invokable {
     /**
      * Handler instance.
      *
-     * @var Handler
+     * @var Initializable<THndlr>
      */
-    protected Handler $handler;
+    protected Initializable $handler;
 
     /**
      * Constructor
@@ -72,7 +77,7 @@ class Filter extends Hook implements Invokable {
         parent::__construct( $tag, $priority, $context, $conditional, $requires, $modifiers );
     }
 
-    public function set_handler( Initializable $handler ): static {
+    public function with_handler( Initializable $handler ): static {
         $this->handler = $handler;
 
         if ( ! $handler->strategy->hooksIndirectly() ) {
@@ -86,10 +91,16 @@ class Filter extends Hook implements Invokable {
         return $this;
     }
 
+    public function with_target( string $method ): static {
+        $this->target = $method;
+
+        return $this;
+    }
+
     /**
      * Sets the number of arguments the hook accepts, and the reflector instance.
      *
-     * @param  \ReflectionMethod $r Reflector instance.
+     * @param  ReflectionMethod $r Reflector instance.
      * @return static
      */
     public function set_reflector( \Reflector $r ): static {
@@ -138,7 +149,7 @@ class Filter extends Hook implements Invokable {
             return $this->indirect_callback( ... );
         }
 
-        return $this->target;
+        return $this->handler->get_target()->{$this->target}( ... );
     }
 
     /**
@@ -175,17 +186,11 @@ class Filter extends Hook implements Invokable {
             return true;
         }
 
-        if ( \is_object( $this->target[0] ?? null ) ) {
+        if ( $this->handler->initialized ) {
             return true;
         }
 
-        if ( ! $this->handler->can_initialize() ) {
-            return false;
-        }
-
-        $this->target[0] = $this->handler->initialize()->target;
-
-        return true;
+        return $this->handler->can_initialize();
     }
 
     protected function indirect_callback( ...$args ) {
@@ -201,14 +206,14 @@ class Filter extends Hook implements Invokable {
 			$args[] = $this;
         }
 
-        return $this->target[0]->{$this->target[1]}( ...$args );
+        return $this->handler->get_target()->{$this->target}( ...$args );
     }
 
     protected function check_hook_method( $args ): bool {
         $method = "can_invoke_{$this->target[1]}";
 
         return \method_exists( $this->target[0], $method )
-            ? $this->target[0]->$method( $this, ...$args )
+            ? $this->handler->get_target()->$method( $this, ...$args )
             : true;
     }
 }
