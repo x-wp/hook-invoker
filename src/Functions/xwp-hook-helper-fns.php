@@ -6,9 +6,10 @@
  * @subpackage Functions
  */
 
-use XWP\Contracts\Hook\Initializable;
-use XWP\Contracts\Hook\Invokable;
-use XWP\Hook\Invoker;
+use XWP\DI\Handler_Factory;
+use XWP\DI\Interfaces\Can_Handle;
+use XWP\DI\Interfaces\Can_Invoke;
+use XWP\DI\Invoker;
 
 /**
  * Register a handler with the Invoker.
@@ -17,39 +18,40 @@ use XWP\Hook\Invoker;
  * @return Invoker
  */
 function xwp_register_handler( string ...$handlers ): Invoker {
-    return Invoker::instance()->register_handlers( ...$handlers );
+    return xwp_hook_invoker()->register_handlers( ...$handlers );
 }
 
 /**
  * Create a handler for a given instance.
  *
- * @template THndlr of object
- * @param  THndlr $instance The instance to create a handler for.
- * @return Initializable<THndlr>
+ * @template TObj of object
+ * @param  TObj $instance The instance to create a handler for.
+ * @return Can_Handle<TObj>
  */
-function xwp_create_handler( object $instance ): Initializable {
-    return Invoker::instance()->create_handler( $instance );
+function xwp_create_handler( object $instance ): Can_Handle {
+    return Handler_Factory::from_instance( $instance, 'xwp-hook' );
 }
 
 /**
  * Load a handler for a given instance.
  *
- * @template THndlr of object
- * @param  THndlr $instance The instance to load a handler for.
+ * @template TObj of object
+ * @param  TObj $instance The instance to load a handler for.
  * @return Invoker
  */
 function xwp_load_handler( object $instance ): Invoker {
-    return Invoker::instance()->load_handler( $instance );
+    return xwp_hook_invoker()->load_handler( $instance, 'xwp-hook' );
 }
 
 /**
  * Load hooks for a given handler.
  *
- * @template THndlr of object
- * @param  Initializable<THndlr>    $handler Handler instance.
- * @param  array<Invokable<THndlr>> $hooks   The hooks to load.
+ * @template TObj of object
+ * @template THnd of Can_Handle<TObj>
+ * @param  THnd                                           $handler Handler instance.
+ * @param  array<string,array<int,Can_Invoke<TObj,THnd>>> $hooks   The hooks to load.
  * @return Invoker
  */
-function xwp_load_hooks( Initializable $handler, array $hooks ): Invoker {
-    return Invoker::instance()->load_hooks( $handler, $hooks );
+function xwp_load_hooks( Can_Handle $handler, array $hooks ): Invoker {
+    return xwp_hook_invoker()->load_hooks( $handler, $hooks );
 }
