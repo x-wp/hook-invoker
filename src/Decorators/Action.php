@@ -8,8 +8,14 @@
 
 namespace XWP\Hook\Decorators;
 
+use XWP\Contracts\Hook\Invokable;
+
 /**
- * Filter decorator.
+ * Action decorator.
+ *
+ * @template THndlr of object
+ * @extends Filter<string,THndlr, \ReflectionMethod>
+ * @implements Invokable<THndlr>
  */
 #[\Attribute( \Attribute::TARGET_FUNCTION | \Attribute::IS_REPEATABLE | \Attribute::TARGET_METHOD )]
 class Action extends Filter {
