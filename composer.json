@@ -22,10 +22,10 @@
   },
   "require": {
     "php": ">=8.0",
-    "x-wp/di-implementation": "^1"
+    "x-wp/di-implementation": "^1 || ^2"
   },
   "require-dev": {
-    "x-wp/di": "^1.7",
+    "x-wp/di": "^2.0",
     "oblak/wordpress-coding-standard": "^1.2",
     "php-stubs/wordpress-stubs": "^6.7",
     "phpstan/extension-installer": "^1.4",
@@ -47,6 +47,8 @@
       "src/Functions/xwp-shared-container-init.php"
     ]
   },
+  "prefer-stable": true,
+  "minimum-stability": "alpha",
   "config": {
     "allow-plugins": {
       "automattic/jetpack-autoloader": true,

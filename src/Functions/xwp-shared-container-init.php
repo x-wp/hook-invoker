@@ -20,12 +20,14 @@ if ( ! function_exists( 'xwp_hook_ctr_init' ) && function_exists( 'add_action' )
 
         xwp_create_app(
             array(
-                'attributes' => false,
-                'autowiring' => true,
-                'compile'    => false,
-                'id'         => 'xwp-hook',
-                'module'     => XWP\Hook\Dummy_Module::class,
-                'proxies'    => false,
+                'cache_app'      => false,
+                'cache_defs'     => false,
+                'cache_hooks'    => false,
+                'id'             => 'xwp-hook',
+                'module'         => XWP\Hook\Dummy_Module::class,
+                'proxies'        => false,
+                'use_attributes' => false,
+                'use_autowiring' => true,
             ),
         );
 
